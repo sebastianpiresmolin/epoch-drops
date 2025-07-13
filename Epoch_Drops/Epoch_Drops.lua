@@ -1,3 +1,9 @@
+local allowedRealm = "ChromieCraft"
+local isAllowedRealm = false
+
+
+
+
 local scanner = CreateFrame("GameTooltip", "EpochTooltipScanner", nil, "GameTooltipTemplate")
 scanner:SetOwner(WorldFrame, "ANCHOR_NONE")
 
@@ -27,13 +33,22 @@ f:RegisterEvent("LOOT_OPENED")
 f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
 f:SetScript("OnEvent", function(self, event, ...)
-    if event == "ADDON_LOADED" then
-        local addonName = ...
-        if addonName == "Epoch_Drops" then
-            print("|cff00ff00[Epoch_Drops loaded]|r")
+   if event == "ADDON_LOADED" then
+    local addonName = ...
+    if addonName == "Epoch_Drops" then
+        local currentRealm = GetRealmName()
+        isAllowedRealm = currentRealm == allowedRealm
+
+        if not isAllowedRealm then
+            print("|cffff0000[Epoch_Drops] Not on allowed realm (" .. currentRealm .. "), addon disabled.|r")
+        else
+            print("|cff00ff00[Epoch_Drops loaded on realm: " .. currentRealm .. "]|r")
         end
+    end
+
 
    elseif event == "LOOT_OPENED" then
+    if not isAllowedRealm then return end
     print("LOOT_OPENED fired")
 
     if UnitIsDead("target") and UnitCanAttack("player", "target") then
@@ -83,6 +98,8 @@ f:SetScript("OnEvent", function(self, event, ...)
 
 
     elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
+        if not isAllowedRealm then return end
+
         local timestamp, subevent, _, _, _, _, _, destGUID, destName = CombatLogGetCurrentEventInfo()
 
         if subevent == "UNIT_DIED" then
