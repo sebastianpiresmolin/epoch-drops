@@ -1,1 +1,43 @@
 **.vs
+**appsettings.json
+**appsettings.Development.json
+## Build results
+bin/
+obj/
+[Bb]uild/
+[Bb]uild[Ll]og.*
+
+## Visual Studio
+.vscode/
+.vs/
+*.user
+*.suo
+
+## NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Rider
+.idea/
+
+## Logs
+*.log
+
+## EF Core
+Migrations/*.Designer.cs
+Migrations/*Snapshot.cs
+
+## DLLs accidentally staged
+*.dll
+*.pdb
+*.exe
+
+## OS generated
+.DS_Store
+Thumbs.db
