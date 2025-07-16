@@ -171,7 +171,7 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
     local moneyReward = GetRewardMoney() or 0
     print("Money Reward:", moneyReward)
 
-    local mobName = string.format("[Quest Reward from: %s | %s]", npcName, questTitle)
+    local questKey = questTitle
 
     -- Get position
     SetMapToCurrentZone()
@@ -181,9 +181,11 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
     x = math.floor((x or 0) * 10000) / 100
     y = math.floor((y or 0) * 10000) / 100
 
-    Epoch_DropsData[mobName] = Epoch_DropsData[mobName] or {
-        kills = 0,
-        drops = {},
+    -- Init quest entry in correct shape
+    Epoch_DropsData[questKey] = Epoch_DropsData[questKey] or {
+        type = "quest",
+        name = questTitle,
+        giver = npcName,
         lastSeen = date("%Y-%m-%d %H:%M:%S"),
         location = {
             zone = zoneName,
@@ -192,61 +194,62 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
             y = y,
         },
         quest = {
-            title = questTitle,
+            name = questTitle,
+            giver = npcName,
             xp = xpReward,
             money = moneyReward,
-            rep = {}
-        }
+            reputation = {}
+        },
+        drops = {}
     }
 
     for i = 1, GetNumFactions() do
         local name, _, _, repValue, _, _, _, _, isHeader = GetFactionInfo(i)
         if name and not isHeader then
-            Epoch_DropsData[mobName].quest.rep[name] = repValue
+            Epoch_DropsData[questKey].quest.reputation[name] = repValue
         end
     end
 
     print(string.format("[Quest Reward] %s | XP: %d | Gold: %.2fg", questTitle, xpReward, moneyReward / 10000))
 
+    local drops = Epoch_DropsData[questKey].drops
+
     -- Choice items (you choose one)
-for i = 1, GetNumQuestChoices() do
-    local itemLink = GetQuestItemLink("choice", i)
-    local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
-    if itemID then
-        local name, icon, quantity = GetQuestItemInfo("choice", i)
-        local tooltipLines = GetTooltipLines(itemLink)
-        local drops = Epoch_DropsData[mobName].drops
-        drops[itemID] = drops[itemID] or {
-            count = 0,
-            id = itemID,
-            name = name,
-            icon = icon,
-            tooltip = tooltipLines
-        }
-        drops[itemID].count = drops[itemID].count + (quantity or 1)
-        print(string.format("  [Quest Choice Item] %s x%d", name, quantity or 1))
+    for i = 1, GetNumQuestChoices() do
+        local itemLink = GetQuestItemLink("choice", i)
+        local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
+        if itemID then
+            local name, icon, quantity = GetQuestItemInfo("choice", i)
+            local tooltipLines = GetTooltipLines(itemLink)
+            drops[itemID] = drops[itemID] or {
+                count = 0,
+                id = itemID,
+                name = name,
+                icon = icon,
+                tooltip = tooltipLines
+            }
+            drops[itemID].count = drops[itemID].count + (quantity or 1)
+            print(string.format("  [Quest Choice Item] %s x%d", name, quantity or 1))
+        end
     end
-end
 
--- Guaranteed reward items (you always get)
-for i = 1, GetNumQuestRewards() do
-    local itemLink = GetQuestItemLink("reward", i)
-    local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
-    if itemID then
-        local name, icon, quantity = GetQuestItemInfo("reward", i)
-        local tooltipLines = GetTooltipLines(itemLink)
-        local drops = Epoch_DropsData[mobName].drops
-        drops[itemID] = drops[itemID] or {
-            count = 0,
-            id = itemID,
-            name = name,
-            icon = icon,
-            tooltip = tooltipLines
-        }
-        drops[itemID].count = drops[itemID].count + (quantity or 1)
-        print(string.format("  [Quest Reward Item] %s x%d", name, quantity or 1))
+    -- Guaranteed reward items (you always get)
+    for i = 1, GetNumQuestRewards() do
+        local itemLink = GetQuestItemLink("reward", i)
+        local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
+        if itemID then
+            local name, icon, quantity = GetQuestItemInfo("reward", i)
+            local tooltipLines = GetTooltipLines(itemLink)
+            drops[itemID] = drops[itemID] or {
+                count = 0,
+                id = itemID,
+                name = name,
+                icon = icon,
+                tooltip = tooltipLines
+            }
+            drops[itemID].count = drops[itemID].count + (quantity or 1)
+            print(string.format("  [Quest Reward Item] %s x%d", name, quantity or 1))
+        end
     end
-end
-
 end)
 
