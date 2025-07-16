@@ -3,22 +3,32 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text.Json;
 using EpochDropsAPI.Models;
 
-public class EpochContext : DbContext
-{
-    public DbSet<Mob> Mobs => Set<Mob>();
-    public DbSet<ItemDrop> ItemDrops => Set<ItemDrop>();
+namespace EpochDropsAPI.data;
 
-    public EpochContext(DbContextOptions<EpochContext> options) : base(options) { }
+public class EpochDropsDbContext : DbContext
+{
+    public DbSet<Item> Items { get; set; }
+    public DbSet<ItemDrop> ItemDrops { get; set; }
+    public DbSet<Mob> Mobs { get; set; }
+    public DbSet<QuestReward> QuestRewards { get; set; }
+    public DbSet<QuestSource> QuestSources { get; set; }
+    public DbSet<Location> Locations { get; set; } = null!;
+    public DbSet<QuestRewardDrop> QuestRewardDrops { get; set; } = null!;
+
+
+    public EpochDropsDbContext(DbContextOptions<EpochDropsDbContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        var converter = new ValueConverter<List<string>, string>(
-            v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
-            v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null) ?? new List<string>()
-        );
+        modelBuilder.Entity<Item>()
+            .HasIndex(i => i.Id)
+            .IsUnique();
 
-        modelBuilder.Entity<ItemDrop>()
-            .Property(e => e.Tooltip)
-            .HasConversion(converter);
+        modelBuilder.Entity<Item>()
+            .Property(i => i.Tooltip)
+            .HasConversion(
+                v => string.Join("|||", v),
+                v => v.Split("|||", StringSplitOptions.None).ToList()
+            );
     }
 }

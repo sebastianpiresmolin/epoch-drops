@@ -1,4 +1,4 @@
-using EpochDropsAPI.Handlers;
+using EpochDropsAPI.handlers;
 
 namespace EpochDropsAPI.Endpoints;
 
