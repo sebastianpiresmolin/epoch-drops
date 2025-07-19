@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using EpochDropsAPI.Models;
 using EpochDropsAPI.data;
 using EpochDropsAPI.dto;
+using EpochDropsAPI.helpers;
 
 namespace EpochDropsAPI.handlers;
 
@@ -51,33 +52,16 @@ public static class UploadHandler
                     {
                         if (drop.Id == 0) continue;
 
-                        var existingItem = await db.Items.FirstOrDefaultAsync(i => i.Id == drop.Id);
-                        if (existingItem == null)
-                        {
-                            existingItem = new Item
-                            {
-                                Id = drop.Id,
-                                Name = drop.Name,
-                                Icon = drop.Icon,
-                                Tooltip = drop.Tooltip,
-                                Rarity = drop.Rarity,
-                                ItemType = drop.ItemType,
-                                ItemSubType = drop.ItemSubType,
-                                EquipSlot = drop.EquipSlot
-                            };
-                            db.Items.Add(existingItem);
-                            await db.SaveChangesAsync();
-                            Console.WriteLine($"✅ Added item: {drop.Name}");
-                        }
+                        var item = await ItemHelper.GetOrCreateItemAsync(db, drop);
 
                         db.QuestRewardDrops.Add(new QuestRewardDrop
                         {
                             Count = drop.Count,
-                            ItemId = existingItem.InternalId,
+                            ItemId = item.InternalId,
                             QuestRewardId = newQuestReward.Id
                         });
 
-                        Console.WriteLine($"🎁 Added quest drop: {existingItem.Name} x{drop.Count}");
+                        Console.WriteLine($"🎁 Added quest drop: {item.Name} x{drop.Count}");
                     }
 
                     await db.SaveChangesAsync();
@@ -132,41 +116,25 @@ public static class UploadHandler
                     continue;
                 }
 
-                var existingItem = await db.Items.FirstOrDefaultAsync(i => i.Id == dropDto.Id);
-                if (existingItem == null)
-                {
-                    existingItem = new Item
-                    {
-                        Id = dropDto.Id,
-                        Name = dropDto.Name,
-                        Icon = dropDto.Icon,
-                        Tooltip = dropDto.Tooltip,
-                        Rarity = dropDto.Rarity,
-                        ItemType = dropDto.ItemType,
-                        ItemSubType = dropDto.ItemSubType,
-                        EquipSlot = dropDto.EquipSlot
-                    };
-                    db.Items.Add(existingItem);
-                    await db.SaveChangesAsync();
-                    Console.WriteLine($"✅ Added item: {dropDto.Name}");
-                }
+                var item = await ItemHelper.GetOrCreateItemAsync(db, dropDto);
 
-                var existingDrop = mob.Drops.FirstOrDefault(d => d.ItemId == existingItem.InternalId);
+                var existingDrop = mob.Drops.FirstOrDefault(d => d.ItemId == item.InternalId);
                 if (existingDrop != null)
                 {
                     existingDrop.Count += dropDto.Count;
-                    Console.WriteLine($"🔁 Updated drop count for {existingItem.Name}");
+                    Console.WriteLine($"🔁 Updated drop count for {item.Name}");
                 }
                 else
                 {
                     mob.Drops.Add(new ItemDrop
                     {
-                        ItemId = existingItem.InternalId,
+                        ItemId = item.InternalId,
                         Count = dropDto.Count
                     });
-                    Console.WriteLine($"➕ Added drop: {existingItem.Name} x{dropDto.Count}");
+                    Console.WriteLine($"➕ Added drop: {item.Name} x{dropDto.Count}");
                 }
             }
+
 
             await db.SaveChangesAsync();
         }
