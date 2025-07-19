@@ -1,16 +1,12 @@
 local allowedRealm = "ChromieCraft"
 local isAllowedRealm = false
 
-
-
-
 local scanner = CreateFrame("GameTooltip", "EpochTooltipScanner", nil, "GameTooltipTemplate")
 scanner:SetOwner(WorldFrame, "ANCHOR_NONE")
 
 local function GetTooltipLines(link)
     scanner:ClearLines()
     scanner:SetHyperlink(link)
-
     local lines = {}
     for i = 1, scanner:NumLines() do
         local leftLine = _G["EpochTooltipScannerTextLeft" .. i]
@@ -24,128 +20,174 @@ local function GetTooltipLines(link)
     return lines
 end
 
+local function escapeString(s)
+    s = s:gsub("\\", "\\\\")
+    s = s:gsub("\"", "\\\"")
+    s = s:gsub("\n", "\\n")
+    s = s:gsub("\r", "\\r")
+    return "\"" .. s .. "\""
+end
+
+local function toJSON(value)
+    if type(value) == "string" then
+        return escapeString(value)
+    elseif type(value) == "number" or type(value) == "boolean" then
+        return tostring(value)
+    elseif type(value) == "table" then
+        local isArray = true
+        local maxIndex = 0
+        for k, _ in pairs(value) do
+            if type(k) ~= "number" then isArray = false break end
+            if k > maxIndex then maxIndex = k end
+        end
+
+        local result = {}
+        if isArray and maxIndex > 0 then
+            for i = 1, maxIndex do
+                table.insert(result, toJSON(value[i]))
+            end
+            return "[" .. table.concat(result, ",") .. "]"
+        else
+            for k, v in pairs(value) do
+                local key = escapeString(tostring(k))
+                table.insert(result, key .. ":" .. toJSON(v))
+            end
+            return "{" .. table.concat(result, ",") .. "}"
+        end
+    else
+        return "null"
+    end
+end
+
 Epoch_DropsData = Epoch_DropsData or {}
 Epoch_DropsData.sessionStarted = Epoch_DropsData.sessionStarted or date("%Y-%m-%d %H:%M:%S")
 
+local function SaveAsJson()
+    if not Epoch_DropsData then return end
+
+    local jsonArray = {}
+
+    for k, v in pairs(Epoch_DropsData) do
+        if k ~= "sessionStarted" then
+            local entry = v
+            entry.name = k
+
+            -- Convert drops table to array
+            if entry.drops and type(entry.drops) == "table" then
+                local dropsArray = {}
+                for _, drop in pairs(entry.drops) do
+                    table.insert(dropsArray, drop)
+                end
+                entry.drops = dropsArray
+            end
+
+            table.insert(jsonArray, entry)
+        end
+    end
+
+    local ok, json = pcall(toJSON, jsonArray)
+    if ok then
+        Epoch_DropsJSON = json
+        print("[Epoch_Drops] Saved JSON array to SavedVariables")
+    else
+        print("[Epoch_Drops] Failed to encode JSON: " .. tostring(json))
+    end
+end
+
+
+-- Create main event frame
 local f = CreateFrame("Frame")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("LOOT_OPENED")
 f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
-
 f:SetScript("OnEvent", function(self, event, ...)
-   if event == "ADDON_LOADED" then
-    local addonName = ...
-    if addonName == "Epoch_Drops" then
-        local currentRealm = GetRealmName()
-        isAllowedRealm = currentRealm == allowedRealm
+    if event == "ADDON_LOADED" then
+        local addonName = ...
+        if addonName == "Epoch_Drops" then
+            local currentRealm = GetRealmName()
+            isAllowedRealm = currentRealm == allowedRealm
 
-        if not isAllowedRealm then
-            print("|cffff0000[Epoch_Drops] Not on allowed realm (" .. currentRealm .. "), addon disabled.|r")
+            if not isAllowedRealm then
+                print("|cffff0000[Epoch_Drops] Not on allowed realm (" .. currentRealm .. "), addon disabled.|r")
+            else
+                print("|cff00ff00[Epoch_Drops loaded on realm: " .. currentRealm .. "]|r")
+            end
+        end
+
+    elseif event == "LOOT_OPENED" then
+        if not isAllowedRealm then return end
+        print("LOOT_OPENED fired")
+        local mobName
+
+        if UnitIsDead("target") and UnitCanAttack("player", "target") then
+            mobName = UnitName("target") or "Unknown"
+            print("Looting mob:", mobName)
         else
-            print("|cff00ff00[Epoch_Drops loaded on realm: " .. currentRealm .. "]|r")
-        end
-    end
+            if MerchantFrame:IsShown() or MailFrame:IsShown() or (TradeFrame and TradeFrame:IsShown()) then
+                print("[Epoch_Drops] Loot skipped: vendor/mail/trade window open.")
+                return
+            end
 
-
-   elseif event == "LOOT_OPENED" then
-    if not isAllowedRealm then return end
-    print("LOOT_OPENED fired")
-
-    local mobName
-
-    -- Priority 1: Valid mob target
-    if UnitIsDead("target") and UnitCanAttack("player", "target") then
-        mobName = UnitName("target") or "Unknown"
-        print("Looting mob:", mobName)
-
-    -- Priority 2: No target, fallback to zone
-    else
-        -- Skip if vendor, mailbox, or trade window open
-        if MerchantFrame:IsShown() or MailFrame:IsShown() or TradeFrame and TradeFrame:IsShown() then
-            print("[Epoch_Drops] Loot skipped: vendor/mail/trade window open.")
-            return
+            local zone = GetRealZoneText() or GetZoneText() or "UnknownZone"
+            local subZone = GetSubZoneText() or ""
+            mobName = "[Untracked Mob in " .. zone .. (subZone ~= "" and (":" .. subZone) or "") .. "]"
+            print("Fallback: Assigned to mob:", mobName)
         end
 
-        -- Fallback assignment
-        local zone = GetRealZoneText() or GetZoneText() or "UnknownZone"
+        SetMapToCurrentZone()
+        local zoneName = GetRealZoneText() or GetZoneText() or "UnknownZone"
         local subZone = GetSubZoneText() or ""
-        mobName = "[Untracked Mob in " .. zone .. (subZone ~= "" and (":" .. subZone) or "") .. "]"
-        print("Fallback: Assigned to mob:", mobName)
-    end
+        local x, y = GetPlayerMapPosition("player")
+        x = math.floor((x or 0) * 10000) / 100
+        y = math.floor((y or 0) * 10000) / 100
 
-    -- Get position
-    SetMapToCurrentZone()
-    local zoneName = GetRealZoneText() or GetZoneText() or "UnknownZone"
-    local subZone = GetSubZoneText() or ""
-    local x, y = GetPlayerMapPosition("player")
-    x = math.floor((x or 0) * 10000) / 100
-    y = math.floor((y or 0) * 10000) / 100
-    print(string.format("Position at loot: %s, %s (%.2f, %.2f)", zoneName, subZone, x, y))
-
-    -- Init mob entry
-    Epoch_DropsData[mobName] = Epoch_DropsData[mobName] or {
-        kills = 0,
-        drops = {},
-        lastSeen = date("%Y-%m-%d %H:%M:%S"),
-        location = {
-            zone = zoneName,
-            subZone = subZone,
-            x = x,
-            y = y,
+        Epoch_DropsData[mobName] = Epoch_DropsData[mobName] or {
+            kills = 0,
+            drops = {},
+            lastSeen = date("%Y-%m-%d %H:%M:%S"),
+            location = { zone = zoneName, subZone = subZone, x = x, y = y }
         }
-    }
-    Epoch_DropsData[mobName].kills = Epoch_DropsData[mobName].kills + 1
+        Epoch_DropsData[mobName].kills = Epoch_DropsData[mobName].kills + 1
+        print(string.format("[Kill+Loot] %s (total kills: %d)", mobName, Epoch_DropsData[mobName].kills))
 
-    print(string.format("[Kill+Loot] %s (total kills: %d)", mobName, Epoch_DropsData[mobName].kills))
+        for i = 1, GetNumLootItems() do
+            local itemLink = GetLootSlotLink(i)
+            local itemName, itemIcon, quantity = GetLootSlotInfo(i)
+            quantity = quantity or 1
+            local name, _, rarity, _, _, itemType, itemSubType, _, equipSlot, icon = GetItemInfo(itemLink or "")
+            local itemID = itemLink and tonumber(string.match(itemLink, "item:(%d+):"))
 
-    -- Process each item
-    for i = 1, GetNumLootItems() do
-        local itemLink = GetLootSlotLink(i)
-        local itemName, itemIcon, quantity = GetLootSlotInfo(i)
-        quantity = quantity or 1
-
-        local name, link, rarity, itemLevel, _, itemType, itemSubType, _, equipSlot, icon = GetItemInfo(itemLink or "")
-        local itemID = itemLink and tonumber(string.match(itemLink, "item:(%d+):"))
-
-        if itemID then
-            local tooltipLines = GetTooltipLines(itemLink)
-
-            local drops = Epoch_DropsData[mobName].drops
-            drops[itemID] = drops[itemID] or {
-                count = 0,
-                id = itemID,
-                name = name or itemName,
-                icon = itemIcon or icon,
-                rarity = rarity,
-                itemType = itemType,
-                itemSubType = itemSubType,
-                equipSlot = equipSlot,
-                tooltip = tooltipLines
-            }
-            drops[itemID].count = drops[itemID].count + quantity
-
-            print(string.format("  Looted %s x%d (%s - %s)", name or itemName, quantity, itemType or "?", itemSubType or "?"))
+            if itemID then
+                local tooltipLines = GetTooltipLines(itemLink)
+                local drops = Epoch_DropsData[mobName].drops
+                drops[itemID] = drops[itemID] or {
+                    count = 0,
+                    id = itemID,
+                    name = name or itemName,
+                    icon = itemIcon or icon,
+                    rarity = rarity,
+                    itemType = itemType,
+                    itemSubType = itemSubType,
+                    equipSlot = equipSlot,
+                    tooltip = tooltipLines
+                }
+                drops[itemID].count = drops[itemID].count + quantity
+                print(string.format("  Looted %s x%d (%s - %s)", name or itemName, quantity, itemType or "?", itemSubType or "?"))
+            end
         end
-    end
+
+        SaveAsJson()
 
     elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
         if not isAllowedRealm then return end
-
-        local timestamp, subevent, _, _, _, _, _, destGUID, destName = CombatLogGetCurrentEventInfo()
-
-        if subevent == "UNIT_DIED" then
-            -- If we're targeting the dying mob
-            if UnitExists("target") and UnitIsDead("target") then
-                local mobName = UnitName("target")
-                if mobName == destName then
-                    Epoch_DropsData[mobName] = Epoch_DropsData[mobName] or {
-                        kills = 0,
-                        drops = {}
-                    }
-                    Epoch_DropsData[mobName].kills = Epoch_DropsData[mobName].kills + 1
-                    print(string.format("[Kill] %s (total kills: %d)", mobName, Epoch_DropsData[mobName].kills))
-                end
+        local _, subevent, _, _, _, _, _, _, destName = CombatLogGetCurrentEventInfo()
+        if subevent == "UNIT_DIED" and UnitExists("target") and UnitIsDead("target") then
+            local mobName = UnitName("target")
+            if mobName == destName then
+                Epoch_DropsData[mobName] = Epoch_DropsData[mobName] or { kills = 0, drops = {} }
+                Epoch_DropsData[mobName].kills = Epoch_DropsData[mobName].kills + 1
+                print(string.format("[Kill] %s (total kills: %d)", mobName, Epoch_DropsData[mobName].kills))
             end
         end
     end
@@ -153,27 +195,14 @@ end)
 
 hooksecurefunc("GetQuestReward", function(choiceIndex)
     print("[Epoch_Drops] GetQuestReward hook triggered")
-
-    if not isAllowedRealm then
-        print("Wrong realm")
-        return
-    end
+    if not isAllowedRealm then return end
 
     local npcName = UnitName("target") or "Unknown"
-    print("NPC Name:", npcName)
-
     local questTitle = GetTitleText() or "Unknown Quest"
-    print("Quest Title:", questTitle)
-
     local xpReward = GetRewardXP() or 0
-    print("XP Reward:", xpReward)
-
     local moneyReward = GetRewardMoney() or 0
-    print("Money Reward:", moneyReward)
-
     local questKey = questTitle
 
-    -- Get position
     SetMapToCurrentZone()
     local zoneName = GetRealZoneText() or GetZoneText() or "UnknownZone"
     local subZone = GetSubZoneText() or ""
@@ -181,18 +210,12 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
     x = math.floor((x or 0) * 10000) / 100
     y = math.floor((y or 0) * 10000) / 100
 
-    -- Init quest entry in correct shape
-    Epoch_DropsData[questKey] = Epoch_DropsData[questKey] or {
+    Epoch_DropsData[questKey] = {
         type = "quest",
         name = questTitle,
         giver = npcName,
         lastSeen = date("%Y-%m-%d %H:%M:%S"),
-        location = {
-            zone = zoneName,
-            subZone = subZone,
-            x = x,
-            y = y,
-        },
+        location = { zone = zoneName, subZone = subZone, x = x, y = y },
         quest = {
             name = questTitle,
             giver = npcName,
@@ -210,11 +233,7 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
         end
     end
 
-    print(string.format("[Quest Reward] %s | XP: %d | Gold: %.2fg", questTitle, xpReward, moneyReward / 10000))
-
     local drops = Epoch_DropsData[questKey].drops
-
-    -- Choice items (you choose one)
     for i = 1, GetNumQuestChoices() do
         local itemLink = GetQuestItemLink("choice", i)
         local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
@@ -229,11 +248,9 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
                 tooltip = tooltipLines
             }
             drops[itemID].count = drops[itemID].count + (quantity or 1)
-            print(string.format("  [Quest Choice Item] %s x%d", name, quantity or 1))
         end
     end
 
-    -- Guaranteed reward items (you always get)
     for i = 1, GetNumQuestRewards() do
         local itemLink = GetQuestItemLink("reward", i)
         local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
@@ -248,8 +265,13 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
                 tooltip = tooltipLines
             }
             drops[itemID].count = drops[itemID].count + (quantity or 1)
-            print(string.format("  [Quest Reward Item] %s x%d", name, quantity or 1))
         end
     end
+
+    SaveAsJson()
 end)
 
+-- Save on /reload or logout
+local saver = CreateFrame("Frame")
+saver:RegisterEvent("PLAYER_LOGOUT")
+saver:SetScript("OnEvent", SaveAsJson)
