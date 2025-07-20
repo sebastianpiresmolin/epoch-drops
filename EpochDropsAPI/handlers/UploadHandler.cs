@@ -1,20 +1,38 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using EpochDropsAPI.Models;
 using EpochDropsAPI.data;
 using EpochDropsAPI.dto;
 using EpochDropsAPI.helpers;
+using Microsoft.AspNetCore.Mvc;
+
 
 namespace EpochDropsAPI.handlers;
 
 public static class UploadHandler
 {
-    public static async Task<IResult> Handle(List<UploadMob> uploadMobs, EpochDropsDbContext db)
+    public static async Task<IResult> Handle(
+        HttpContext context,
+        List<UploadMob> uploadMobs,
+        [FromServices] EpochDropsDbContext db,
+        [FromServices] IOptions<UploaderSettings> uploaderOptions)
     {
+        // ✅ Validate secret
+        var receivedKey = context.Request.Headers["X-Upload-key"].ToString();
+        var expectedKey = uploaderOptions.Value.SecretKey;
+
+        if (string.IsNullOrWhiteSpace(receivedKey) || receivedKey != expectedKey)
+        {
+            Console.WriteLine("🚫 Unauthorized upload attempt.");
+            return Results.Unauthorized();
+        }
+
         foreach (var uploadMob in uploadMobs)
         {
             Console.WriteLine($"Processing: {uploadMob.Name} (type: {uploadMob.Type})");
 
-            // 🎯 Handle QUEST uploads first and exit early
+            // 🎯 QUEST upload
             if (uploadMob.Type == "quest" && uploadMob.Quest != null)
             {
                 var quest = uploadMob.Quest;
@@ -67,10 +85,10 @@ public static class UploadHandler
                     await db.SaveChangesAsync();
                 }
 
-                continue; // ✅ skip mob logic entirely
+                continue;
             }
 
-            // 🗺️ Add Location for mob
+            // 🧟 MOB upload
             var mobLocation = new Location
             {
                 Zone = uploadMob.Location.Zone,
@@ -81,7 +99,6 @@ public static class UploadHandler
             db.Locations.Add(mobLocation);
             await db.SaveChangesAsync();
 
-            // 🧟 Handle Mob
             var mob = await db.Mobs
                 .Include(m => m.Drops)
                 .FirstOrDefaultAsync(m => m.Name == uploadMob.Name);
@@ -107,7 +124,6 @@ public static class UploadHandler
                 Console.WriteLine($"🔁 Updating mob: {mob.Name}");
             }
 
-            // 💧 Handle Item Drops
             foreach (var dropDto in uploadMob.Drops)
             {
                 if (dropDto.Id == 0)
@@ -134,7 +150,6 @@ public static class UploadHandler
                     Console.WriteLine($"➕ Added drop: {item.Name} x{dropDto.Count}");
                 }
             }
-
 
             await db.SaveChangesAsync();
         }

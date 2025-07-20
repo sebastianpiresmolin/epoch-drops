@@ -21,6 +21,9 @@ namespace EpochDropsUploader
         {
             InitializeComponent();
 
+            string exePath = Application.ExecutablePath;
+            StartupHelper.AddToStartup("EpochDropsUploader", exePath);
+
             logBox = new TextBox
             {
                 Multiline = true,
@@ -38,7 +41,7 @@ namespace EpochDropsUploader
             trayIcon = new NotifyIcon
             {
                 Text = "Epoch Drops Uploader",
-                Icon = SystemIcons.Application,
+                Icon = new Icon("favicon.ico"),
                 ContextMenuStrip = trayMenu,
                 Visible = true
             };
@@ -49,6 +52,23 @@ namespace EpochDropsUploader
             this.Show();
 
             StartWatching();
+        }
+
+        public static bool IsValidRealm(string addonFilePath, string allowedRealm)
+        {
+            try
+            {
+                if (!File.Exists(addonFilePath))
+                    return false;
+
+                var firstLine = File.ReadLines(addonFilePath).FirstOrDefault();
+                return firstLine?.Trim() == $"local allowedRealm = \"{allowedRealm}\"";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking realm: {ex.Message}");
+                return false;
+            }
         }
 
         private void StartWatching()
@@ -104,6 +124,15 @@ namespace EpochDropsUploader
 
         private async void OnEpochDropsChanged(object sender, FileSystemEventArgs e)
         {
+            var config = Config.Load();
+            var addonLuaPath = Path.Combine(config.WowRootPath, "Interface", "AddOns", "Epoch_Drops", "epoch_drops.lua");
+
+            if (!IsValidRealm(addonLuaPath, Secrets.AllowedRealm))
+            {
+                Log("🚫 Upload aborted. Realm check failed.");
+                return;
+            }
+
             if (!File.Exists(e.FullPath))
             {
                 Log("⚠️ File does not exist: " + e.FullPath);
@@ -115,7 +144,7 @@ namespace EpochDropsUploader
 
             try
             {
-                await Task.Delay(1000);
+                await Task.Delay(1000); // let the file settle
 
                 try
                 {
@@ -129,8 +158,11 @@ namespace EpochDropsUploader
                 }
 
                 using var client = new HttpClient();
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync("http://localhost:5223/upload", content);
+                var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:5223/upload");
+                request.Headers.Add("X-Upload-Key", Secrets.UploadKey);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await client.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -148,6 +180,7 @@ namespace EpochDropsUploader
                 Log("⚠️ Error during upload: " + ex.Message);
             }
         }
+
 
         private void OnChangePathClicked(object? sender, EventArgs e)
         {
