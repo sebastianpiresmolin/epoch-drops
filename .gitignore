@@ -41,3 +41,6 @@ Migrations/*Snapshot.cs
 ## OS generated
 .DS_Store
 Thumbs.db
+
+.EpochDropsUploader\Secrets.cs
+EpochDropsUploader/Secrets.cs
