@@ -10,7 +10,9 @@ public static class MobEndpoints
 
         app.UseCors("AllowFrontend");
         app.MapGet("/search", QuickSearchHandler.Handle);
-        
+
+        app.UseCors("AllowFrontend");
+        app.MapGet("/mob/{id:int}", MobDetailsHandler.Handle);
 
     }
 }
