@@ -2,7 +2,7 @@ namespace EpochDropsUploader
 {
     public static class Secrets
     {
-        public const string UploadKey = ""; // Ask owner for key
-        public const string AllowedRealm = "";
+        public const string UploadKey = "Tycho7752";
+        public const string AllowedRealm = "ChromieCraft";
     }
 }

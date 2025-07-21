@@ -24,11 +24,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+    <body className={`${geistSans.variable} relative`}>
+    <div className="absolute min-w-full min-h-screen inset-0 z-0 bg-[url('/bg.jpeg')] bg-cover bg-center opacity-50"/>
+    <div className="relative z-10">
+      {children}
+    </div>
+    </body>
     </html>
   );
 }
