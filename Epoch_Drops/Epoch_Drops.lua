@@ -161,11 +161,13 @@ f:SetScript("OnEvent", function(self, event, ...)
             if itemID then
                 local tooltipLines = GetTooltipLines(itemLink)
                 local drops = Epoch_DropsData[mobName].drops
+                local iconName = icon and icon:match("Interface\\Icons\\(.+)") or ""
+
                 drops[itemID] = drops[itemID] or {
                     count = 0,
                     id = itemID,
                     name = name or itemName,
-                    icon = itemIcon or icon,
+                    icon = iconName:lower(),
                     rarity = rarity,
                     itemType = itemType,
                     itemSubType = itemSubType,
