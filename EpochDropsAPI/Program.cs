@@ -14,7 +14,7 @@ builder.Services.AddCors(options =>
 {
    options.AddPolicy("AllowFrontend",
        policy => policy
-           .WithOrigins("http://localhost:3000", "https://epoch-drops.vercel.app")
+           .WithOrigins("http://localhost:3000", "https://epoch-drops.vercel.app", "https://epoch-drops.com", "https://www.epoch-drops.com")
            .AllowAnyMethod()
            .AllowAnyHeader()
    );

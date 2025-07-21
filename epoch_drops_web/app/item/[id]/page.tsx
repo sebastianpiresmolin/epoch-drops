@@ -1,4 +1,7 @@
 import React from "react";
+import Link from "next/link";
+import { getRarityColor } from "@/lib/rarityUtils";
+
 
 type MobDrop = {
     mobId: number;
@@ -69,7 +72,9 @@ export default async function ItemPage({ params }: { params: { id: string } }) {
                     alt={data.name}
                     className="w-16 h-16 mb-4 ml-4 border border-gray-600 rounded-md"
                 />
-                <h1 className="text-2xl font-bold ml-4">{data.name}</h1>
+                <h1 className={`text-2xl font-bold ml-4 ${getRarityColor(data.rarity)}`}>
+                    {data.name}
+                </h1>
                 <h2 className="text-xl font-bold ml-4">{data.itemSubType}</h2>
 
                 <div className="space-y-1 p-4">
@@ -103,7 +108,11 @@ export default async function ItemPage({ params }: { params: { id: string } }) {
                         <tbody>
                         {data.questRewards.map((qr: any) => (
                             <tr key={qr.questId} className="border-t border-gray-600 bg-black">
-                                <td className="px-2 py-1">{qr.title}</td>
+                                <td className="px-2 py-1">
+                                    <Link href={`/quest/${qr.questId}`} className="hover:underline">
+                                        {qr.title}
+                                    </Link>
+                                </td>
                                 <td className="px-2 py-1">{qr.sourceMob}</td>
                                 <td className="px-2 py-1 text-center">{qr.xp}</td>
                                 <td className="px-2 py-1 text-center">{qr.money}</td>
@@ -136,7 +145,11 @@ export default async function ItemPage({ params }: { params: { id: string } }) {
                         <tbody>
                         {mobsWithChance.map((mob) => (
                             <tr key={mob.mobId} className="border-t border-gray-600 bg-black">
-                                <td className="px-2 py-1">{mob.mobName}</td>
+                                <td className="px-2 py-1">
+                                    <Link href={`/mob/${mob.mobId}`} className="hover:underline">
+                                        {mob.mobName}
+                                    </Link>
+                                </td>
                                 <td className="px-2 py-1">
                                     {mob.zone || mob.subZone
                                         ? `${mob.zone || ''}${mob.subZone ? ' – ' + mob.subZone : ''}`
