@@ -22,8 +22,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+   var db = scope.ServiceProvider.GetRequiredService<EpochDropsDbContext>();
+   db.Database.Migrate();
+}
+
 app.MapMobEndpoints();
 app.MapItemEndpoints();
 app.MapQuestEndpoints();
+
+app.Urls.Add("http://*:8080");
 
 app.Run();
