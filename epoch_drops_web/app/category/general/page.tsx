@@ -57,9 +57,9 @@ export default async function GeneralCategoryPage({
             </table>
 
             <div className="mt-6 flex justify-center gap-4">
-                {page > 1 && (
+                {pageNumber > 1 && (
                     <Link
-                        href={`?category=${encodeURIComponent(category)}&page=${page - 1}`}
+                        href={`?category=${encodeURIComponent(category)}&page=${pageNumber - 1}`}
                         className="bg-gray-800 px-4 py-2 rounded hover:bg-gray-700"
                     >
                         ← Previous
