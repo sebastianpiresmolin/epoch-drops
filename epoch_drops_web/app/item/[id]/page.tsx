@@ -43,7 +43,7 @@ export default async function ItemPage({
 }) {
     const { id } = await params;
 
-    const res = await fetch(`http://localhost:5223/item/${id}`, {
+    const res = await fetch(`http://epoch-drops-production.up.railway.app/item/${id}`, {
         cache: "no-store",
     });
 

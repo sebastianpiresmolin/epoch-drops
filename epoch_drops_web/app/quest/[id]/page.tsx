@@ -9,7 +9,7 @@ export default async function QuestPage({
 }) {
     const { id } = await params;
 
-    const res = await fetch(`http://localhost:5223/quest/${id}`, { cache: 'no-store' });
+    const res = await fetch(`http://epoch-drops-production.up.railway.app/quest/${id}`, { cache: 'no-store' });
 
     if (!res.ok) {
         return <div className="p-6 text-red-500">Quest not found.</div>;

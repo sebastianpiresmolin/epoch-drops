@@ -26,7 +26,7 @@ export default async function MobPage({
 }) {
     const { id } = await params;
 
-    const res = await fetch(`http://localhost:5223/mob/${id}`, {
+    const res = await fetch(`http://epoch-drops-production.up.railway.app/mob/${id}`, {
         cache: "no-store",
     });
 
