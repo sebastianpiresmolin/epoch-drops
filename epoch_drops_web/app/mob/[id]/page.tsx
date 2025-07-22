@@ -19,8 +19,14 @@ type MobDetails = {
     items: DroppedItem[];
 };
 
-export default async function MobPage({ params }: { params: { id: string } }) {
-    const res = await fetch(`http://localhost:5223/mob/${params.id}`, {
+export default async function MobPage({
+                                          params,
+                                      }: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
+
+    const res = await fetch(`http://localhost:5223/mob/${id}`, {
         cache: "no-store",
     });
 

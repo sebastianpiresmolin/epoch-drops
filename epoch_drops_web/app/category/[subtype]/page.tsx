@@ -9,12 +9,20 @@ type Item = {
     icon: string;
 };
 
-export default async function CategoryPage({ params, searchParams }: {
-    params: { subtype: string };
-    searchParams: { page?: string };
+export default async function CategoryPage({
+                                               params,
+                                               searchParams
+                                           }: {
+    params: Promise<{ subtype: string }>;
+    searchParams: Promise<{ page?: string }>;
 }) {
-    const page = parseInt(searchParams.page ?? "1", 10);
-    const res = await fetch(`http://localhost:5223/items/by-subtype?subType=${params.subtype}&page=${page}`, {
+    const { subtype } = await params;
+    const { page = "1" } = await searchParams;
+
+    const pageNumber = parseInt(page, 10);
+    const decodedSubtype = decodeURIComponent(subtype);
+
+    const res = await fetch(`http://localhost:5223/items/by-subtype?subType=${decodedSubtype}&page=${pageNumber}`, {
         cache: "no-store"
     });
 
@@ -25,10 +33,12 @@ export default async function CategoryPage({ params, searchParams }: {
     return (
         <div className="p-6 text-white">
             <a href="/">
-                <img src="/full-logo.png" className="w-1/4 p-0 mb-[5vh]"/>
+                <img src="/full-logo.png" className="w-1/4 p-0 mb-[5vh]" />
             </a>
-            <h1 className="text-2xl font-bold mb-4">{decodeURIComponent(params.subtype)}</h1>
+
+            <h1 className="text-2xl font-bold mb-4">{decodedSubtype}</h1>
             <p className="text-sm mb-6">Sorted by rarity, paginated by 50</p>
+
             <table className="table-auto border border-gray-700 w-full text-sm">
                 <thead>
                 <tr className="bg-gray-800">
@@ -46,8 +56,8 @@ export default async function CategoryPage({ params, searchParams }: {
                                     className="w-6 h-6"
                                 />
                                 <span className={`font-medium ${getRarityColor(item.rarity)}`}>
-                            {item.name}
-                        </span>
+                                        {item.name}
+                                    </span>
                             </Link>
                         </td>
                     </tr>
@@ -55,22 +65,31 @@ export default async function CategoryPage({ params, searchParams }: {
                 </tbody>
             </table>
 
-            <div className="mt-6 flex gap-4">
-                {page > 1 && (
+            <div className="mt-6 flex justify-center items-center gap-4">
+                {pageNumber > 1 ? (
                     <Link
+                        href={`?page=${pageNumber - 1}`}
                         className="bg-gray-800 px-4 py-2 rounded hover:bg-gray-700"
-                        href={`?page=${page - 1}`}
                     >
-                        Previous
+                        ← Previous
                     </Link>
+                ) : (
+                    <span className="px-4 py-2 text-gray-500">← Previous</span>
                 )}
-                {page < totalPages && (
+
+                <span className="text-sm text-gray-400">
+                    Page {pageNumber} of {totalPages}
+                </span>
+
+                {pageNumber < totalPages ? (
                     <Link
+                        href={`?page=${pageNumber + 1}`}
                         className="bg-gray-800 px-4 py-2 rounded hover:bg-gray-700"
-                        href={`?page=${page + 1}`}
                     >
-                        Next
+                        Next →
                     </Link>
+                ) : (
+                    <span className="px-4 py-2 text-gray-500">Next →</span>
                 )}
             </div>
         </div>

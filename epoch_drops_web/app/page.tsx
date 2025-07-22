@@ -9,9 +9,10 @@ export default function Home() {
           <h1 className="font-bold text-xl">Unoffical Community Item Database</h1>
           <SearchBar/>
           <CategoryFilter/>
-          <h2 className="font-bold mt-2">Want to help gather data? Download the addon <a href="/"
+          <h2 className="font-bold mt-2">Want to help gather data? Download the addon <a href="https://github.com/sebastianpiresmolin/epoch-drops/blob/main/README.md"
                                                                                          className="text-blue-400">here</a>
           </h2>
+          <h1 className="pt-6 text-xl text-yellow-500 font-bold">Database is empty until it is organically generated after Epoch launch!</h1>
       </div>
   );
 }

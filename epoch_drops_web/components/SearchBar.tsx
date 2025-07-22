@@ -69,7 +69,7 @@ export default function SearchBar() {
                     {results.map((r, i) => (
                         <li
                             key={i}
-                            className={`p-2 hover:bg-gray-100 cursor-pointer ${getRarityClass(r.rarity ?? 1)}`}
+                            className={`p-2 hover:bg-gray-700 cursor-pointer ${getRarityClass(r.rarity ?? 1)}`}
                             onClick={() => handleSelect(r)}
                         >
                             {r.type}: {r.name}

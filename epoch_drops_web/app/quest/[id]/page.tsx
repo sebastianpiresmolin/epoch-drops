@@ -1,8 +1,14 @@
 import { getRarityColor } from '@/lib/rarityUtils';
 import Image from 'next/image';
 
-export default async function QuestPage({ params }: { params: { id: string } }) {
-    const res = await fetch(`http://localhost:5223/quest/${params.id}`, { cache: 'no-store' });
+export default async function QuestPage({
+                                            params,
+                                        }: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
+
+    const res = await fetch(`http://localhost:5223/quest/${id}`, { cache: 'no-store' });
 
     if (!res.ok) {
         return <div className="p-6 text-red-500">Quest not found.</div>;

@@ -68,20 +68,38 @@ export default function CategoryFilter() {
         const sub = categories[label as keyof Categories];
         if (!sub) return null;
 
-        // Handle arrays like Weapons, Containers, etc.
+        // If sub is an empty array, render a direct link
         if (Array.isArray(sub)) {
+            if (sub.length === 0) {
+                return (
+                    <div className="absolute left-full top-0 bg-gray-900 border border-white p-2 w-64 text-sm text-white">
+                        <Link
+                            href={`/category/general?category=${encodeURIComponent(label)}`}
+                            className="block hover:bg-gray-700 px-2 py-1"
+                        >
+                            {label}
+                        </Link>
+                    </div>
+                );
+            }
+
+            // Render submenu list
             return (
                 <div className="absolute left-full top-0 bg-gray-900 border border-white p-2 w-64 text-sm text-white">
                     {sub.map((v) => (
-                        <Link href={`/category/${encodeURIComponent(v)}`} key={v}>
-                            <div className="hover:bg-gray-700 px-2 py-1 cursor-pointer">{v}</div>
+                        <Link
+                            key={v}
+                            href={`/category/${encodeURIComponent(v)}`}
+                            className="block hover:bg-gray-700 px-2 py-1"
+                        >
+                            {v}
                         </Link>
                     ))}
                 </div>
             );
         }
 
-        // Handle Armor object structure
+        // For Armor (object structure)
         if (typeof sub === 'object') {
             return (
                 <div className="absolute left-full top-0 bg-gray-900 border border-white p-2 w-64 text-sm text-white">
@@ -92,18 +110,27 @@ export default function CategoryFilter() {
                             onMouseEnter={() => setHoveredSub(key)}
                         >
                             {key}
-                            {Array.isArray(val) && val.length > 0 && hoveredSub === key && (
-                                <div className="absolute left-full top-0 bg-gray-800 border border-white p-2 w-48">
-                                    {val.map((slot) => (
-                                        <Link
-                                            key={slot}
-                                            href={`/armor/${encodeURIComponent(key)}/${encodeURIComponent(slot)}`}
-                                            className="block hover:bg-gray-700 px-2 py-1"
-                                        >
-                                            {slot}
-                                        </Link>
-                                    ))}
-                                </div>
+                            {hoveredSub === key && (
+                                Array.isArray(val) && val.length > 0 ? (
+                                    <div className="absolute left-full top-0 bg-gray-800 border border-white p-2 w-48">
+                                        {val.map((slot) => (
+                                            <Link
+                                                key={slot}
+                                                href={`/armor/${encodeURIComponent(key)}/${encodeURIComponent(slot)}`}
+                                                className="block hover:bg-gray-700 px-2 py-1"
+                                            >
+                                                {slot}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <Link
+                                        href={`/armor/${encodeURIComponent(key)}/${encodeURIComponent(key)}`}
+                                        className="absolute left-full top-0 bg-gray-800 border border-white px-2 py-1 w-48 hover:bg-gray-700 block"
+                                    >
+                                        View {key}
+                                    </Link>
+                                )
                             )}
                         </div>
                     ))}
@@ -113,6 +140,7 @@ export default function CategoryFilter() {
 
         return null;
     };
+
 
 
     return (

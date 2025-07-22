@@ -15,5 +15,8 @@ public static class ItemEndpoints
 
         app.UseCors("AllowFrontend");
         app.MapGet("/category/armor", GetArmorItemsBySubType.Handle);
+
+        app.UseCors("AllowFrontend");
+        app.MapGet("/category/general", GetItemsByCategory.Handle);
     }
 }
