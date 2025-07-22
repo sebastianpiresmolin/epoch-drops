@@ -4,13 +4,14 @@ import {getRarityColor} from "@/lib/rarityUtils";
 export default async function GeneralCategoryPage({
                                                       searchParams,
                                                   }: {
-    searchParams: { category?: string; page?: string };
+    searchParams: Promise<{ category?: string; page?: string }>;
 }) {
-    const category = decodeURIComponent(searchParams.category ?? "");
-    const page = parseInt(searchParams.page ?? "1", 10);
+    const { category = "", page = "1" } = await searchParams;
+    const decodedCategory = decodeURIComponent(category);
+    const pageNumber = parseInt(page, 10);
 
     const res = await fetch(
-        `http://localhost:5223/category/general?category=${category}&page=${page}`,
+        `http://localhost:5223/category/general?category=${decodedCategory}&page=${pageNumber}`,
         { cache: "no-store" }
     );
 

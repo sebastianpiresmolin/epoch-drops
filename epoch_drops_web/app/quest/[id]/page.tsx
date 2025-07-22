@@ -1,5 +1,6 @@
 import { getRarityColor } from '@/lib/rarityUtils';
 import Image from 'next/image';
+import React from "react";
 
 export default async function QuestPage({
                                             params,
@@ -18,6 +19,9 @@ export default async function QuestPage({
 
     return (
         <div className="p-6">
+            <a href="/">
+                <img src="/full-logo.png" className="w-1/4 p-0 mb-[5vh]"/>
+            </a>
             <h1 className="text-2xl font-bold mb-2">{data.title}</h1>
 
             <div className="mb-6">
