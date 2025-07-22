@@ -22,7 +22,7 @@ export default async function CategoryPage({
     const pageNumber = parseInt(page, 10);
     const decodedSubtype = decodeURIComponent(subtype);
 
-    const res = await fetch(`http://epoch-drops-production.up.railway.app/items/by-subtype?subType=${decodedSubtype}&page=${pageNumber}`, {
+    const res = await fetch(`https://epoch-drops-production.up.railway.app/items/by-subtype?subType=${decodedSubtype}&page=${pageNumber}`, {
         cache: "no-store"
     });
 

@@ -21,7 +21,7 @@ export default async function ArmorSlotPage({ params, searchParams }: PageProps)
     const decodedSlot = decodeURIComponent(slot);
     const pageNumber = parseInt(page, 10);
 
-    const res = await fetch(`http://epoch-drops-production.up.railway.app/category/armor?subtype=${decodedSubtype}&slot=${decodedSlot}&page=${pageNumber}`, {
+    const res = await fetch(`https://epoch-drops-production.up.railway.app/category/armor?subtype=${decodedSubtype}&slot=${decodedSlot}&page=${pageNumber}`, {
         cache: "no-store",
     });
 

@@ -11,7 +11,7 @@ export default async function GeneralCategoryPage({
     const pageNumber = parseInt(page, 10);
 
     const res = await fetch(
-        `http://epoch-drops-production.up.railway.app/category/general?category=${decodedCategory}&page=${pageNumber}`,
+        `https://epoch-drops-production.up.railway.app/category/general?category=${decodedCategory}&page=${pageNumber}`,
         { cache: "no-store" }
     );
 

@@ -44,7 +44,7 @@ export default function SearchBar() {
 
         timeoutRef.current = setTimeout(async () => {
             try {
-                const res = await fetch(`http://epoch-drops-production.up.railway.app/search?q=${encodeURIComponent(query.trim())}`);
+                const res = await fetch(`https://epoch-drops-production.up.railway.app/search?q=${encodeURIComponent(query.trim())}`);
                 const data = await res.json();
                 setResults(data);
                 setShowDropdown(true);
