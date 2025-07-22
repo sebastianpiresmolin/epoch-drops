@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: epoch-drops-api
+    rootDir: EpochDropsAPI
+    runtime: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
