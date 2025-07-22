@@ -1,4 +1,5 @@
 import SearchBar from "@/components/SearchBar";
+import CategoryFilter from "@/components/CategoryFilter";
 
 
 export default function Home() {
@@ -7,6 +8,7 @@ export default function Home() {
           <img src="/full-logo.png" className="w-1/4"/>
           <h1 className="font-bold text-xl">Unoffical Community Item Database</h1>
           <SearchBar/>
+          <CategoryFilter/>
           <h2 className="font-bold mt-2">Want to help gather data? Download the addon <a href="/"
                                                                                          className="text-blue-400">here</a>
           </h2>

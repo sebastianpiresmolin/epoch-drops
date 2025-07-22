@@ -9,5 +9,11 @@ public static class ItemEndpoints
     {
         app.UseCors("AllowFrontend");
         app.MapGet("/item/{id:int}", ItemDetailHandler.Handle);
+
+        app.UseCors("AllowFrontend");
+        app.MapGet("/items/by-subtype", GetItemsBySubType.Handle);
+
+        app.UseCors("AllowFrontend");
+        app.MapGet("/category/armor", GetArmorItemsBySubType.Handle);
     }
 }
