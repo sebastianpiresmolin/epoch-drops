@@ -105,24 +105,8 @@ A modern web frontend built with **Next.js App Router**:
 
 ## 📌 Notes
 
-- **Data is only accepted from ChromieCraft** (or the configured realm).
-- **Secure uploads** using a hardcoded key embedded in the tray app.
+- **Data is only accepted from Epoch** (or the configured realm).
 - **No user accounts or authentication required** — it's designed to be seamless and automatic.
-
----
-
-## 🛠 How to Use
-
-*You can fill this section in yourself, detailing how to install the addon, run the tray app, and explore the site.*
-
----
-
-## 🧠 Future Improvements
-
-- Web-based submission for Linux/macOS users.
-- Authentication for uploader uploads (instead of just a secret key).
-- Admin panel for moderation or data cleanup.
-- Automatic addon version checking and updates.
 
 ---
 
