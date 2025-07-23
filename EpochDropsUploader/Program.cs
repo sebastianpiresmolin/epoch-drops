@@ -8,9 +8,22 @@ static class Program
     [STAThread]
     static void Main()
     {
-        // To customize application configuration such as set high DPI settings or default font,
-        // see https://aka.ms/applicationconfiguration.
         ApplicationConfiguration.Initialize();
-        Application.Run(new Form1());
-    }    
+
+        AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+        {
+            File.WriteAllText("crash.log", args.ExceptionObject.ToString());
+            MessageBox.Show("Unhandled exception occurred. See crash.log.");
+        };
+
+        try
+        {
+            Application.Run(new Form1());
+        }
+        catch (Exception ex)
+        {
+            File.WriteAllText("fatal.log", ex.ToString());
+            MessageBox.Show("Fatal error. See fatal.log.");
+        }
+    }
 }

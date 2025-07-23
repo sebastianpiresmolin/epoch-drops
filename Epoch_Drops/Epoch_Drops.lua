@@ -1,4 +1,4 @@
-local allowedRealm = "ChromieCraft"
+local allowedRealm = "Kezan"
 local isAllowedRealm = false
 
 local scanner = CreateFrame("GameTooltip", "EpochTooltipScanner", nil, "GameTooltipTemplate")
