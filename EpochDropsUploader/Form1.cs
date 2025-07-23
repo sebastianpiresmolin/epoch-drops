@@ -47,9 +47,9 @@ namespace EpochDropsUploader
             };
 
             // Optional: hide window and only use tray
-            this.WindowState = FormWindowState.Normal;
-            this.ShowInTaskbar = true;
-            this.Show();
+            this.WindowState = FormWindowState.Minimized;
+            this.ShowInTaskbar = false;
+            this.Hide();
 
             StartWatching();
         }
@@ -158,7 +158,7 @@ namespace EpochDropsUploader
                 }
 
                 using var client = new HttpClient();
-                var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:5223/upload");
+                var request = new HttpRequestMessage(HttpMethod.Post, "https://epoch-drops-production.up.railway.app/upload");
                 request.Headers.Add("X-Upload-Key", Secrets.UploadKey);
                 request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 

@@ -88,9 +88,6 @@ local function SaveAsJson()
     local ok, json = pcall(toJSON, jsonArray)
     if ok then
         Epoch_DropsJSON = json
-        print("[Epoch_Drops] Saved JSON array to SavedVariables")
-    else
-        print("[Epoch_Drops] Failed to encode JSON: " .. tostring(json))
     end
 end
 
@@ -117,22 +114,19 @@ f:SetScript("OnEvent", function(self, event, ...)
 
     elseif event == "LOOT_OPENED" then
         if not isAllowedRealm then return end
-        print("LOOT_OPENED fired")
+
         local mobName
 
         if UnitIsDead("target") and UnitCanAttack("player", "target") then
             mobName = UnitName("target") or "Unknown"
-            print("Looting mob:", mobName)
         else
             if MerchantFrame:IsShown() or MailFrame:IsShown() or (TradeFrame and TradeFrame:IsShown()) then
-                print("[Epoch_Drops] Loot skipped: vendor/mail/trade window open.")
                 return
             end
 
             local zone = GetRealZoneText() or GetZoneText() or "UnknownZone"
             local subZone = GetSubZoneText() or ""
             mobName = "[Untracked Mob in " .. zone .. (subZone ~= "" and (":" .. subZone) or "") .. "]"
-            print("Fallback: Assigned to mob:", mobName)
         end
 
         SetMapToCurrentZone()
@@ -149,7 +143,7 @@ f:SetScript("OnEvent", function(self, event, ...)
             location = { zone = zoneName, subZone = subZone, x = x, y = y }
         }
         Epoch_DropsData[mobName].kills = Epoch_DropsData[mobName].kills + 1
-        print(string.format("[Kill+Loot] %s (total kills: %d)", mobName, Epoch_DropsData[mobName].kills))
+
 
         for i = 1, GetNumLootItems() do
             local itemLink = GetLootSlotLink(i)
@@ -175,7 +169,6 @@ f:SetScript("OnEvent", function(self, event, ...)
                     tooltip = tooltipLines
                 }
                 drops[itemID].count = drops[itemID].count + quantity
-                print(string.format("  Looted %s x%d (%s - %s)", name or itemName, quantity, itemType or "?", itemSubType or "?"))
             end
         end
 
@@ -189,14 +182,12 @@ f:SetScript("OnEvent", function(self, event, ...)
             if mobName == destName then
                 Epoch_DropsData[mobName] = Epoch_DropsData[mobName] or { kills = 0, drops = {} }
                 Epoch_DropsData[mobName].kills = Epoch_DropsData[mobName].kills + 1
-                print(string.format("[Kill] %s (total kills: %d)", mobName, Epoch_DropsData[mobName].kills))
             end
         end
     end
 end)
 
 hooksecurefunc("GetQuestReward", function(choiceIndex)
-    print("[Epoch_Drops] GetQuestReward hook triggered")
     if not isAllowedRealm then return end
 
     local npcName = UnitName("target") or "Unknown"
