@@ -17,7 +17,7 @@ https://drive.google.com/drive/folders/16phXHPQ1df6tmI-1ffAUDee9M9s4npso?usp=dri
 
 # Epoch Drops
 
-> A comprehensive WoW 3.3.5a item drop tracker and explorer for the ChromieCraft server.  
+> A comprehensive WoW 3.3.5a item drop tracker and explorer for the Epoch server.  
 > Consists of a WoW Addon, an uploader tray application, a .NET API backend, and a modern frontend web app.
 
 ---
