@@ -13,7 +13,7 @@ https://drive.google.com/drive/folders/16phXHPQ1df6tmI-1ffAUDee9M9s4npso?usp=dri
 *If you're not prompted, just right click the Epoch icon in the sytem tray and select Change installation path*
 <img width="448" height="155" alt="image" src="https://github.com/user-attachments/assets/d74b7214-9339-4d6f-ab4a-0d63dcce6c95" />
 
-**Now you're ready to go! Each time you wanna upload, play the game with the exe running. Don't worry if you forgot to start the exe when playing. The data will be saved an uploaded the next time you run the game with the exe running**
+**Now you're ready to go! Each time you wanna upload, play the game with the exe running. Don't worry if you forgot to start the exe when playing. The data will be saved and uploaded the next time you run the game with the exe running**
 
 # Epoch Drops
 
@@ -24,7 +24,7 @@ https://drive.google.com/drive/folders/16phXHPQ1df6tmI-1ffAUDee9M9s4npso?usp=dri
 
 ## 🌐 Overview
 
-Epoch Drops is a multi-component ecosystem built to collect, analyze, and display mob drop and quest reward data from World of Warcraft (3.3.5a), focused specifically on the **ChromieCraft** server.
+Epoch Drops is a multi-component ecosystem built to collect, analyze, and display mob drop and quest reward data from World of Warcraft (3.3.5a), focused specifically on the **Epoch** server.
 
 This project helps players discover where to find items, how often they drop, and what quests reward them.
 
