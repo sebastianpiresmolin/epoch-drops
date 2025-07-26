@@ -54,7 +54,7 @@ namespace EpochDropsUploader
             StartWatching();
         }
 
-        public static bool IsValidRealm(string addonFilePath, string allowedRealm)
+        public static bool IsValidRealm(string addonFilePath, string[] allowedRealms)
         {
             try
             {
@@ -62,7 +62,20 @@ namespace EpochDropsUploader
                     return false;
 
                 var firstLine = File.ReadLines(addonFilePath).FirstOrDefault();
-                return firstLine?.Trim() == $"local allowedRealm = \"{allowedRealm}\"";
+                if (firstLine == null)
+                    return false;
+
+                var match = Regex.Match(firstLine, @"local\s+allowedRealms\s*=\s*\{([^}]+)\}");
+                if (!match.Success)
+                    return false;
+
+                var realmsList = match.Groups[1].Value;
+
+                var parsedRealms = realmsList.Split(',')
+                                             .Select(r => r.Trim().Trim('"'))
+                                             .ToList();
+
+                return allowedRealms.Any(r => parsedRealms.Contains(r));
             }
             catch (Exception ex)
             {
@@ -127,7 +140,7 @@ namespace EpochDropsUploader
             var config = Config.Load();
             var addonLuaPath = Path.Combine(config.WowRootPath, "Interface", "AddOns", "Epoch_Drops", "epoch_drops.lua");
 
-            if (!IsValidRealm(addonLuaPath, Secrets.AllowedRealm))
+            if (!IsValidRealm(addonLuaPath, Secrets.AllowedRealms))
             {
                 Log("🚫 Upload aborted. Realm check failed.");
                 return;
