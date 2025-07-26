@@ -3,6 +3,6 @@ namespace EpochDropsUploader
     public static class Secrets
     {
         public const string UploadKey = "";
-        public static readonly string[] AllowedRealms = { "Kezan", "Gurubashi" };
+        public static readonly string[] AllowedRealms = "";
     }
 }
