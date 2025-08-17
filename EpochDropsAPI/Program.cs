@@ -5,6 +5,13 @@ using EpochDropsAPI.helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add JSON options for proper serialization
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+   options.SerializerOptions.PropertyNameCaseInsensitive = true;
+   options.SerializerOptions.WriteIndented = true;
+});
+
 builder.Services.AddDbContext<EpochDropsDbContext>(options =>
    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
