@@ -12,7 +12,7 @@ export default function Home() {
           <h2 className="font-bold mt-2">Want to help gather data? Download the addon <a href="https://github.com/sebastianpiresmolin/epoch-drops/blob/main/README.md"
                                                                                          className="text-blue-400">here</a>
           </h2>
-          <h1 className="pt-6 text-xl text-yellow-500 font-bold">Database is empty until it is organically generated after Epoch launch!</h1>
+          <h1 className="pt-6 text-xl text-green-500 font-bold">NEW WORKING ADDON 2025-08-17, please update on link above</h1>
       </div>
   );
 }
