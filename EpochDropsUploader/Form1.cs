@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -21,8 +24,20 @@ namespace EpochDropsUploader
         {
             InitializeComponent();
 
-            string exePath = Application.ExecutablePath;
-            StartupHelper.AddToStartup("EpochDropsUploader", exePath);
+            // Check if running as administrator
+            if (!IsRunningAsAdministrator())
+            {
+                MessageBox.Show("This application requires administrator privileges to function properly.",
+                    "Administrator Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // The manifest will handle the UAC prompt, but we can inform the user
+            }
+
+            // Only add to startup if running as admin to avoid registry issues
+            if (IsRunningAsAdministrator())
+            {
+                string exePath = Application.ExecutablePath;
+                StartupHelper.AddToStartup("EpochDropsUploader", exePath);
+            }
 
             logBox = new TextBox
             {
@@ -47,11 +62,27 @@ namespace EpochDropsUploader
             };
 
             // Optional: hide window and only use tray
-            this.WindowState = FormWindowState.Minimized;
+            this.WindowState = FormWindowState.Normal;
             this.ShowInTaskbar = false;
             this.Hide();
 
             StartWatching();
+        }
+
+        private static bool IsRunningAsAdministrator()
+        {
+            try
+            {
+                using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+                {
+                    WindowsPrincipal principal = new WindowsPrincipal(identity);
+                    return principal.IsInRole(WindowsBuiltInRole.Administrator);
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public static bool IsValidRealm(string addonFilePath, string[] allowedRealms)
@@ -65,17 +96,26 @@ namespace EpochDropsUploader
                 if (firstLine == null)
                     return false;
 
-                var match = Regex.Match(firstLine, @"local\s+allowedRealms\s*=\s*\{([^}]+)\}");
-                if (!match.Success)
-                    return false;
+                // Try to match array format: local allowedRealms = {"realm1", "realm2"}
+                var arrayMatch = Regex.Match(firstLine, @"local\s+allowedRealms\s*=\s*\{([^}]+)\}");
+                if (arrayMatch.Success)
+                {
+                    var realmsList = arrayMatch.Groups[1].Value;
+                    var parsedRealms = realmsList.Split(',')
+                                                 .Select(r => r.Trim().Trim('"'))
+                                                 .ToList();
+                    return allowedRealms.Any(r => parsedRealms.Contains(r));
+                }
 
-                var realmsList = match.Groups[1].Value;
+                // Try to match single string format: local allowedRealm = "realm"
+                var stringMatch = Regex.Match(firstLine, @"local\s+allowedRealm\s*=\s*""([^""]+)""");
+                if (stringMatch.Success)
+                {
+                    var realm = stringMatch.Groups[1].Value;
+                    return allowedRealms.Contains(realm);
+                }
 
-                var parsedRealms = realmsList.Split(',')
-                                             .Select(r => r.Trim().Trim('"'))
-                                             .ToList();
-
-                return allowedRealms.Any(r => parsedRealms.Contains(r));
+                return false;
             }
             catch (Exception ex)
             {
@@ -129,7 +169,65 @@ namespace EpochDropsUploader
             // Unescape Lua string (e.g. turn `\\n` into `\n`)
             var json = Regex.Unescape(encodedJson);
 
+            // Fix the JSON format: convert empty objects to empty arrays for drops field
+            json = FixJsonFormat(json);
+
             return json;
+        }
+
+        private string FixJsonFormat(string json)
+        {
+            try
+            {
+                // Parse the JSON to fix the structure
+                var jsonDocument = JsonDocument.Parse(json);
+                var jsonArray = JsonSerializer.Deserialize<JsonElement[]>(json);
+                
+                if (jsonArray == null)
+                    return json;
+                
+                var fixedArray = new List<object>();
+                
+                foreach (var item in jsonArray)
+                {
+                    var itemDict = JsonSerializer.Deserialize<Dictionary<string, object>>(item.GetRawText());
+                    
+                    if (itemDict == null)
+                        continue;
+                    
+                    // Fix drops field - convert empty object to empty array
+                    if (itemDict.ContainsKey("drops"))
+                    {
+                        var dropsValue = itemDict["drops"];
+                        if (dropsValue is JsonElement dropsElement)
+                        {
+                            if (dropsElement.ValueKind == JsonValueKind.Object)
+                            {
+                                // Check if it's an empty object
+                                var dropsDict = JsonSerializer.Deserialize<Dictionary<string, object>>(dropsElement.GetRawText());
+                                if (dropsDict != null && dropsDict.Count == 0)
+                                {
+                                    itemDict["drops"] = new object[0]; // Empty array
+                                }
+                            }
+                        }
+                    }
+                    
+                    fixedArray.Add(itemDict);
+                }
+                
+                return JsonSerializer.Serialize(fixedArray);
+            }
+            catch (Exception ex)
+            {
+                // If JSON parsing fails, try a simple regex replacement as fallback
+                Log($"⚠️ JSON parsing failed, using regex fallback: {ex.Message}");
+                
+                // Replace empty drops objects with empty arrays
+                json = Regex.Replace(json, @"""drops"":\s*\{\s*\}", @"""drops"":[]");
+                
+                return json;
+            }
         }
 
 

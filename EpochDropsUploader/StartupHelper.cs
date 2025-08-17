@@ -7,7 +7,7 @@ public static class StartupHelper
     {
         try
         {
-            RegistryKey rk = Registry.CurrentUser.OpenSubKey
+            RegistryKey? rk = Registry.CurrentUser.OpenSubKey
                 ("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
 
             if (rk == null) return;
@@ -16,6 +16,8 @@ public static class StartupHelper
             {
                 rk.SetValue(appName, $"\"{exePath}\"");
             }
+
+            rk.Close();
         }
         catch (Exception ex)
         {

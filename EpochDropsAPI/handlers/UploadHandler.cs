@@ -86,12 +86,19 @@ public static class UploadHandler
             var rawBody = await reader.ReadToEndAsync();
 
             Console.WriteLine($"🔍 Raw body length: {rawBody.Length}");
-            Console.WriteLine($"🔍 Raw body preview: {rawBody.Take(500)}...");
+            Console.WriteLine($"🔍 Raw body content: '{rawBody}'");
 
             if (string.IsNullOrWhiteSpace(rawBody))
             {
                 Console.WriteLine("❌ Empty request body");
                 return Results.BadRequest("Empty request body");
+            }
+
+            // Handle empty array case
+            if (rawBody.Trim() == "[]")
+            {
+                Console.WriteLine("⚠️ Empty JSON array received");
+                return Results.BadRequest("No upload data received - empty array");
             }
 
             // Try to deserialize manually

@@ -1,4 +1,4 @@
-local allowedRealms = {"Kezan", "Gurubashi"}
+local allowedRealms = {"Menethil", "Gurubashi", "Kezan", "Uldaman"}
 local isAllowedRealm = false
 
 local scanner = CreateFrame("GameTooltip", "EpochTooltipScanner", nil, "GameTooltipTemplate")
@@ -103,9 +103,11 @@ f:SetScript("OnEvent", function(self, event, ...)
         local addonName = ...
         if addonName == "Epoch_Drops" then
             local currentRealm = GetRealmName()
-            for _, allowedRealm in pairs(allowedRealms) do
-                if currentRealm == allowedRealm then
+            isAllowedRealm = false
+            for _, realm in ipairs(allowedRealms) do
+                if currentRealm == realm then
                     isAllowedRealm = true
+                    break
                 end
             end
 
