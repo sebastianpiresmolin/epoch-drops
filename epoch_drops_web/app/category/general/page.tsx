@@ -68,7 +68,7 @@ export default async function GeneralCategoryPage({
                 <span className="text-gray-400">Page {page} of {totalPages}</span>
                 {page < totalPages && (
                     <Link
-                        href={`?category=${encodeURIComponent(category)}&page=${page + 1}`}
+                        href={`?category=${encodeURIComponent(category)}&page=${pageNumber + 1}`}
                         className="bg-gray-800 px-4 py-2 rounded hover:bg-gray-700"
                     >
                         Next →
