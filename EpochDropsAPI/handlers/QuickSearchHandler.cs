@@ -47,7 +47,7 @@ public static class QuickSearchHandler
             })
             .ToListAsync();
 
-        var allResults = itemResults.Concat(mobResults).Concat(questResults).Take(3);
+        var allResults = itemResults.Concat(mobResults).Concat(questResults).Take(5);
         return Results.Ok(allResults);
     }
 }
