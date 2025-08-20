@@ -43,7 +43,7 @@ const categories: Categories = {
         "Crossbows", "Wands", "Fishing Poles",
     ],
     Armor: {
-        Cloth: ["Head", "Shoulder", "Chest", "Wrist", "Hands", "Waist", "Legs", "Feet"],
+        Cloth: ["Head", "Shoulder", "Cloak", "Chest", "Wrist", "Hands", "Waist", "Legs", "Feet"],
         Leather: ["Head", "Shoulder", "Chest", "Wrist", "Hands", "Waist", "Legs", "Feet"],
         Mail: ["Head", "Shoulder", "Chest", "Wrist", "Hands", "Waist", "Legs", "Feet"],
         Plate: ["Head", "Shoulder", "Chest", "Wrist", "Hands", "Waist", "Legs", "Feet"],
