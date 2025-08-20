@@ -15,7 +15,7 @@ public static class QuickSearchHandler
         var itemResults = await db.Items
         .Where(i => i.Name.ToLower().Contains(q))
         .OrderBy(i => i.Name)
-        .Take(1)
+        .Take(3)
         .Select(i => new { type = "Item", id = i.Id, name = i.Name, rarity = (int?)i.Rarity, icon = i.Icon })
         .ToListAsync();
 
