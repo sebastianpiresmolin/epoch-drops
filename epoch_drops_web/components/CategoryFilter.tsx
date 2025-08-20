@@ -9,7 +9,7 @@ type WeaponCategory =
     | "Fist Weapons" | "Miscellaneous" | "Daggers" | "Thrown"
     | "Crossbows" | "Wands" | "Fishing Poles";
 
-type ArmorSlot = "Head" | "Shoulder" | "Chest" | "Wrist" | "Hands" | "Waist" | "Legs" | "Feet";
+type ArmorSlot = "Head" | "Shoulder" | "Cloak" | "Chest" | "Wrist" | "Hands" | "Waist" | "Legs" | "Feet";
 type MiscSubType = "Amulets" | "Cloaks" | "Rings" | "Trinkets" | "Off-hand" | "Shirts" | "Tabards";
 
 type ArmorCategory = {
