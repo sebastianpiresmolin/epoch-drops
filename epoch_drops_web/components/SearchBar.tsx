@@ -52,7 +52,7 @@ export default function SearchBar() {
                 console.error('Search failed', err);
                 setResults([]);
             }
-        }, 1000); // debounce 1s
+        }, 500); // debounce 0.5s
     }, [query]);
 
     return (
