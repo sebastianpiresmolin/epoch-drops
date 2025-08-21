@@ -9,7 +9,7 @@ type WeaponCategory =
     | "Fist Weapons" | "Miscellaneous" | "Daggers" | "Thrown"
     | "Crossbows" | "Wands" | "Fishing Poles";
 
-type ArmorSlot = "Head" | "Shoulder" | "Cloak" | "Chest" | "Wrist" | "Hands" | "Waist" | "Legs" | "Feet";
+type ArmorSlot = "Head" | "Shoulder" | "Cloak" | "Chest" | "Wrist" | "Hand" | "Waist" | "Legs" | "Feet";
 type MiscSubType = "Amulets" | "Cloaks" | "Rings" | "Trinkets" | "Off-hand" | "Shirts" | "Tabards";
 
 type ArmorCategory = {
@@ -43,10 +43,10 @@ const categories: Categories = {
         "Crossbows", "Wands", "Fishing Poles",
     ],
     Armor: {
-        Cloth: ["Head", "Shoulder", "Cloak", "Chest", "Wrist", "Hands", "Waist", "Legs", "Feet"],
-        Leather: ["Head", "Shoulder", "Chest", "Wrist", "Hands", "Waist", "Legs", "Feet"],
-        Mail: ["Head", "Shoulder", "Chest", "Wrist", "Hands", "Waist", "Legs", "Feet"],
-        Plate: ["Head", "Shoulder", "Chest", "Wrist", "Hands", "Waist", "Legs", "Feet"],
+        Cloth: ["Head", "Shoulder", "Cloak", "Chest", "Wrist", "Hand", "Waist", "Legs", "Feet"],
+        Leather: ["Head", "Shoulder", "Chest", "Wrist", "Hand", "Waist", "Legs", "Feet"],
+        Mail: ["Head", "Shoulder", "Chest", "Wrist", "Hand", "Waist", "Legs", "Feet"],
+        Plate: ["Head", "Shoulder", "Chest", "Wrist", "Hand", "Waist", "Legs", "Feet"],
         Shields: [],
         Librams: [],
         Idols: [],
