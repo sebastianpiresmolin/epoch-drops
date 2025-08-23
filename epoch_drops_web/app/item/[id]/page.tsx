@@ -144,7 +144,6 @@ export default async function ItemPage({
                         <tr className="bg-gray-800">
                             <th className="px-2 py-1 text-left">Mob</th>
                             <th className="px-2 py-1 text-left">Location</th>
-                            <th className="px-2 py-1 text-center">Drop Count</th>
                             <th className="px-2 py-1 text-center">Drop Rate</th>
                         </tr>
                         </thead>
@@ -161,7 +160,6 @@ export default async function ItemPage({
                                         ? `${mob.zone || ''}${mob.subZone ? ' – ' + mob.subZone : ''}`
                                         : 'Unknown'}
                                 </td>
-                                <td className="px-2 py-1 text-center">{mob.dropCount}</td>
                                 <td className="px-2 py-1 text-center">{mob.dropChance}</td>
                             </tr>
                         ))}
