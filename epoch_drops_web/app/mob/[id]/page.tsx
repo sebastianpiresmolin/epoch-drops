@@ -54,7 +54,6 @@ export default async function MobPage({
                     <thead>
                     <tr className="bg-gray-800">
                         <th className="px-2 py-1 text-left">Item</th>
-                        <th className="px-2 py-1">Count</th>
                         <th className="px-2 py-1">Drop Rate</th>
                     </tr>
                     </thead>
