@@ -45,9 +45,6 @@ export default async function MobPage({
             <p className="text-sm mb-4">
                 Location: {data.zone ?? "Unknown"}{data.subZone ? ` - ${data.subZone}` : ""}
             </p>
-            <p className="text-sm mb-4">
-                Total Kills Recorded: {data.totalKills}
-            </p>
 
             <h2 className="text-xl font-semibold mt-6 mb-2">Items Dropped:</h2>
             {data.items.length === 0 ? (
@@ -76,7 +73,6 @@ export default async function MobPage({
                                     </span>
                                 </Link>
                             </td>
-                            <td className="px-2 py-1 text-center">{item.dropCount}</td>
                             <td className="px-2 py-1 text-center">{item.dropChance}</td>
                         </tr>
                     ))}
