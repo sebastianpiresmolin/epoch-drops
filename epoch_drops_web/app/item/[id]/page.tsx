@@ -35,6 +35,32 @@ type ItemDetails = {
     tooltip: string[];
     mobsThatDrop: MobDrop[];
 };
+function computeSwingSpeed(tooltip: string[] | undefined | null): number | null {
+  if (!Array.isArray(tooltip)) return null;
+
+  let min: number | null = null;
+  let max: number | null = null;
+  let dps: number | null = null;
+
+  for (const line of tooltip) {
+    const dmgMatch = line.match(/(\d+)\s*-\s*(\d+)\s*Damage/i);
+    if (dmgMatch) {
+      min = parseInt(dmgMatch[1], 10);
+      max = parseInt(dmgMatch[2], 10);
+    }
+    const dpsMatch = line.match(/([0-9]+(?:\.[0-9]+)?)\s*damage per second/i);
+    if (dpsMatch) {
+      dps = parseFloat(dpsMatch[1]);
+    }
+  }
+
+  if (min != null && max != null && dps && dps > 0) {
+    const avg = (min + max) / 2;
+    const speed = avg / dps; // seconds per swing
+    return Math.round(speed * 100) / 100;
+  }
+  return null;
+}
 
 export default async function ItemPage({
                                            params,
@@ -65,7 +91,20 @@ export default async function ItemPage({
     const cleanedTooltip = (data.tooltip || [])
         .filter(line => line?.trim())
         .filter((line, i) => i !== 0 || line !== data.name);
-
+    // Calculate swing speed and inject after the DPS line if present
+    const swingSpeed = computeSwingSpeed(data.tooltip);
+    const displayTooltip = (() => {
+        if (!swingSpeed) return cleanedTooltip;
+        const arr = [...cleanedTooltip];
+        const dpsIndex = arr.findIndex(l => /damage per second/i.test(l));
+        const speedLine = `Speed ${swingSpeed.toFixed(2)}`;
+        if (dpsIndex >= 0) {
+            arr.splice(dpsIndex + 1, 0, speedLine);
+        } else {
+            arr.push(speedLine);
+        }
+        return arr;
+    })();
 
     return (
         <div className="text-white p-6">
@@ -84,10 +123,10 @@ export default async function ItemPage({
                 <h2 className="text-xl font-bold ml-4">{data.itemSubType}</h2>
 
                 <div className="space-y-1 p-4">
-                    {cleanedTooltip.length > 0 && (
+                    {displayTooltip.length > 0 && (
                         <div>
                             <ul className=" list-none">
-                                {cleanedTooltip.map((line, i) => (
+                                {displayTooltip.map((line, i) => (
                                     <li key={i}>{line}</li>
                                 ))}
                             </ul>
