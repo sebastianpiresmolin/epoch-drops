@@ -181,9 +181,10 @@ f:SetScript("OnEvent", function(self, event, ...)
         -- ---- FISHING BRANCH ----
         if IsFishingLootSafe() then
             local zoneName, subZone, x, y = GetPlayerPos()
+            -- NEW: Fishing key as <Zone:Sub Zone>, or <Zone> if no sub-zone
             local key = (subZone and subZone ~= "")
-                and ("<" .. zoneName .. ":" .. subZone .. ">")
-                or  ("<" .. zoneName .. ">")
+			local locTag = (subZone and subZone ~= "") and (zoneName .. ":" .. subZone) or zoneName
+			local key = "Fishing - " .. locTag
 
             Epoch_DropsData[key] = Epoch_DropsData[key] or {
                 type     = "fishing",
@@ -229,6 +230,7 @@ f:SetScript("OnEvent", function(self, event, ...)
             return
         end
 
+        -- ---- MOB LOOT BRANCH (unchanged) ----
         local mobName
         if UnitIsDead("target") and UnitCanAttack("player", "target") then
             mobName = UnitName("target") or "Unknown"
