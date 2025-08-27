@@ -181,7 +181,10 @@ f:SetScript("OnEvent", function(self, event, ...)
         -- ---- FISHING BRANCH ----
         if IsFishingLootSafe() then
             local zoneName, subZone, x, y = GetPlayerPos()
-            local key = "Fishing - " .. zoneName
+            local key = (subZone and subZone ~= "")
+                and ("<" .. zoneName .. ":" .. subZone .. ">")
+                or  ("<" .. zoneName .. ">")
+
             Epoch_DropsData[key] = Epoch_DropsData[key] or {
                 type     = "fishing",
                 kills    = 0,  -- treat each catch as a 'kill'
