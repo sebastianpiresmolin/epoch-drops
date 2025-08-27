@@ -2,9 +2,6 @@ local allowedRealms = {"Menethil", "Gurubashi", "Kezan", "Uldaman"}
 local isAllowedRealm = false
 local initialized = false
 
--- =========================================================
--- Simple debug facility (persists in SavedVariables)
--- =========================================================
 Epoch_DropsData = Epoch_DropsData or {}
 Epoch_DropsData.sessionStarted = Epoch_DropsData.sessionStarted or date("%Y-%m-%d %H:%M:%S")
 if Epoch_DropsData.debug == nil then Epoch_DropsData.debug = false end
@@ -25,9 +22,6 @@ local function dbg(fmt, ...)
     end
 end
 
--- =========================================================
--- Tooltip scanner (for storing item tooltip lines)
--- =========================================================
 local scanner = CreateFrame("GameTooltip", "EpochTooltipScanner", nil, "GameTooltipTemplate")
 scanner:SetOwner(WorldFrame, "ANCHOR_NONE")
 
@@ -155,9 +149,6 @@ local function IsFishingLootSafe()
     return false
 end
 
--- =========================================================
--- Event handling
--- =========================================================
 local f = CreateFrame("Frame")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("LOOT_OPENED")
@@ -232,11 +223,9 @@ f:SetScript("OnEvent", function(self, event, ...)
 
             dbg("Fishing catch recorded in %s at (%.2f, %.2f). Items: %d", key, x or 0, y or 0, itemsLogged)
             SaveAsJson()
-            return  -- do not let fishing fall through to 'untracked mob'
+            return
         end
-        -- ---- END FISHING BRANCH ----
 
-        -- ===== Existing LOOT_OPENED mob flow remains unchanged =====
         local mobName
         if UnitIsDead("target") and UnitCanAttack("player", "target") then
             mobName = UnitName("target") or "Unknown"
@@ -305,9 +294,6 @@ f:SetScript("OnEvent", function(self, event, ...)
     end
 end)
 
--- =========================================================
--- Quest reward capture (unchanged, with debug prints)
--- =========================================================
 hooksecurefunc("GetQuestReward", function(choiceIndex)
     if not isAllowedRealm then return end
 
