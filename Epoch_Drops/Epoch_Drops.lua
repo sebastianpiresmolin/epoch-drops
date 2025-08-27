@@ -28,6 +28,14 @@ local function escapeString(s)
     return "\"" .. s .. "\""
 end
 
+local function cleanIconName(icon)
+    if not icon or icon == "" then
+        return ""
+    end
+    local iconName = icon:match("Interface[/\\][Ii]cons[/\\](.+)") or icon
+    return iconName:lower()
+end
+
 local function toJSON(value)
     if type(value) == "string" then
         return escapeString(value)
@@ -91,6 +99,14 @@ local function SaveAsJson()
     end
 end
 
+-- === Wrath 3.3.5 compatibility shim ===
+local function GetCLEUArgs(...)
+    if CombatLogGetCurrentEventInfo then
+        return CombatLogGetCurrentEventInfo()
+    else
+        return ...
+    end
+end
 
 -- Create main event frame
 local f = CreateFrame("Frame")
@@ -150,7 +166,6 @@ f:SetScript("OnEvent", function(self, event, ...)
         }
         Epoch_DropsData[mobName].kills = Epoch_DropsData[mobName].kills + 1
 
-
         for i = 1, GetNumLootItems() do
             local itemLink = GetLootSlotLink(i)
             local itemName, itemIcon, quantity = GetLootSlotInfo(i)
@@ -161,13 +176,12 @@ f:SetScript("OnEvent", function(self, event, ...)
             if itemID then
                 local tooltipLines = GetTooltipLines(itemLink)
                 local drops = Epoch_DropsData[mobName].drops
-                local iconName = icon and icon:match("Interface\\Icons\\(.+)") or ""
 
                 drops[itemID] = drops[itemID] or {
                     count = 0,
                     id = itemID,
                     name = name or itemName,
-                    icon = iconName:lower(),
+                    icon = cleanIconName(icon),
                     rarity = rarity,
                     itemType = itemType,
                     itemSubType = itemSubType,
@@ -182,7 +196,8 @@ f:SetScript("OnEvent", function(self, event, ...)
 
     elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
         if not isAllowedRealm then return end
-        local _, subevent, _, _, _, _, _, _, destName = CombatLogGetCurrentEventInfo()
+        -- Use the shim so Wrath 3.3.5 works (no CombatLogGetCurrentEventInfo on that client)
+        local _, subevent, _, _, _, _, _, _, destName = GetCLEUArgs(...)
         if subevent == "UNIT_DIED" and UnitExists("target") and UnitIsDead("target") then
             local mobName = UnitName("target")
             if mobName == destName then
@@ -238,12 +253,17 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
         local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
         if itemID then
             local name, icon, quantity = GetQuestItemInfo("choice", i)
+            local _, _, rarity, _, _, itemType, itemSubType, _, equipSlot, fullIcon = GetItemInfo(itemLink or "")
             local tooltipLines = GetTooltipLines(itemLink)
             drops[itemID] = drops[itemID] or {
                 count = 0,
                 id = itemID,
                 name = name,
-                icon = icon,
+                icon = cleanIconName(fullIcon or icon),
+                rarity = rarity,
+                itemType = itemType,
+                itemSubType = itemSubType,
+                equipSlot = equipSlot,
                 tooltip = tooltipLines
             }
             drops[itemID].count = drops[itemID].count + (quantity or 1)
@@ -255,12 +275,17 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
         local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
         if itemID then
             local name, icon, quantity = GetQuestItemInfo("reward", i)
+            local _, _, rarity, _, _, itemType, itemSubType, _, equipSlot, fullIcon = GetItemInfo(itemLink or "")
             local tooltipLines = GetTooltipLines(itemLink)
             drops[itemID] = drops[itemID] or {
                 count = 0,
                 id = itemID,
                 name = name,
-                icon = icon,
+                icon = cleanIconName(fullIcon or icon),
+                rarity = rarity,
+                itemType = itemType,
+                itemSubType = itemSubType,
+                equipSlot = equipSlot,
                 tooltip = tooltipLines
             }
             drops[itemID].count = drops[itemID].count + (quantity or 1)
