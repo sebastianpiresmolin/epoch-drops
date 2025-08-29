@@ -69,7 +69,6 @@ local function toJSON(value)
             if type(k) ~= "number" then isArray = false break end
             if k > maxIndex then maxIndex = k end
         end
-
         local result = {}
         if isArray and maxIndex > 0 then
             for i = 1, maxIndex do
@@ -90,15 +89,11 @@ end
 
 local function SaveAsJson()
     if not Epoch_DropsData then return end
-
     local jsonArray = {}
-
     for k, v in pairs(Epoch_DropsData) do
         if k ~= "sessionStarted" and k ~= "debug" then
             local entry = v
             entry.name = k
-
-            -- Convert drops table (id->obj) to array for export
             if entry.drops and type(entry.drops) == "table" then
                 local dropsArray = {}
                 for _, drop in pairs(entry.drops) do
@@ -106,11 +101,9 @@ local function SaveAsJson()
                 end
                 entry.drops = dropsArray
             end
-
             table.insert(jsonArray, entry)
         end
     end
-
     local ok, json = pcall(toJSON, jsonArray)
     if ok then
         Epoch_DropsJSON = json
@@ -140,13 +133,42 @@ local function GetCLEUArgs(...)
     end
 end
 
--- Fishing detection that won't error if IsFishingLoot() is missing
 local function IsFishingLootSafe()
     if IsFishingLoot then
         local ok, result = pcall(IsFishingLoot)
         if ok then return result end
     end
     return false
+end
+
+local processedLootTokenAt = {} -- token -> timestamp
+local LOOT_TTL = 300             -- seconds: corpse re-open ignore window
+
+local function pruneOld(cache, ttl)
+    local now = GetTime()
+    for k, t in pairs(cache) do
+        if now - t > ttl then cache[k] = nil end
+    end
+end
+
+local function markOrSeen(cache, token, ttl)
+    pruneOld(cache, ttl)
+    if not token or token == "" then return false end
+    if cache[token] then return true end
+    cache[token] = GetTime()
+    return false
+end
+
+local function GetLootOwnerGUID()
+    if UnitExists("target") and UnitIsDead("target") then
+        local g = UnitGUID("target")
+        if g and g ~= "" then return g end
+    end
+    if GetLootSourceInfo then
+        local ok, a = pcall(GetLootSourceInfo, 1) -- guid1,count1,guid2,count2,...
+        if ok and type(a) == "string" and a ~= "" then return a end
+    end
+    return nil
 end
 
 local f = CreateFrame("Frame")
@@ -181,7 +203,6 @@ f:SetScript("OnEvent", function(self, event, ...)
         -- ---- FISHING BRANCH ----
         if IsFishingLootSafe() then
             local zoneName, subZone, x, y = GetPlayerPos()
-            -- NEW: Fishing key as <Zone:Sub Zone>, or <Zone> if no sub-zone
             local key = (subZone and subZone ~= "")
 			local locTag = (subZone and subZone ~= "") and (zoneName .. ":" .. subZone) or zoneName
 			local key = "Fishing - " .. locTag
@@ -203,7 +224,6 @@ f:SetScript("OnEvent", function(self, event, ...)
                 local itemLink = GetLootSlotLink(i)
                 local itemName, _, quantity = GetLootSlotInfo(i)
                 quantity = quantity or 1
-
                 local name, _, rarity, _, _, itemType, itemSubType, _, equipSlot, icon = GetItemInfo(itemLink or "")
                 local itemID = itemLink and tonumber(string.match(itemLink, "item:(%d+):"))
                 if itemID then
@@ -219,7 +239,7 @@ f:SetScript("OnEvent", function(self, event, ...)
                         equipSlot   = equipSlot,
                         tooltip     = tooltipLines
                     }
-                    drops[itemID].count = drops[itemID].count + quantity
+                    drops[itemID].count = (drops[itemID].count or 0) + quantity
                     itemsLogged = itemsLogged + 1
                     dbg("Fishing drop: +%d x %s (ID %d) -> %s", quantity, drops[itemID].name or "?", itemID, key)
                 end
@@ -230,20 +250,24 @@ f:SetScript("OnEvent", function(self, event, ...)
             return
         end
 
-        -- ---- MOB LOOT BRANCH (unchanged) ----
+        local zoneName, subZone, x, y = GetPlayerPos()
+        local lootGUID = GetLootOwnerGUID()
+
         local mobName
         if UnitIsDead("target") and UnitCanAttack("player", "target") then
             mobName = UnitName("target") or "Unknown"
         else
-            if (MerchantFrame and MerchantFrame:IsShown()) or (MailFrame and MailFrame:IsShown()) or (TradeFrame and TradeFrame:IsShown()) then
-                return
-            end
-            local zone = GetRealZoneText() or GetZoneText() or "UnknownZone"
-            local subZone = GetSubZoneText() or ""
-            mobName = "[Untracked Mob in " .. zone .. (subZone ~= "" and (":" .. subZone) or "") .. "]"
+            local zone = zoneName or GetRealZoneText() or GetZoneText() or "UnknownZone"
+            local sz   = subZone or GetSubZoneText() or ""
+            mobName = "[Untracked Mob in " .. zone .. (sz ~= "" and (":" .. sz) or "") .. "]"
         end
 
-        local zoneName, subZone, x, y = GetPlayerPos()
+        -- Token: prefer corpse GUID; fall back to a location+name token
+        local lootToken = lootGUID or ("noguid:" .. (mobName or "?") .. ":" .. (zoneName or "?") .. ":" .. (subZone or ""))
+        if markOrSeen(processedLootTokenAt, lootToken, LOOT_TTL) then
+            dbg("Skip duplicate loot window for token %s", lootToken)
+            return
+        end
 
         Epoch_DropsData[mobName] = Epoch_DropsData[mobName] or {
             kills = 0,
@@ -251,7 +275,7 @@ f:SetScript("OnEvent", function(self, event, ...)
             lastSeen = date("%Y-%m-%d %H:%M:%S"),
             location = { zone = zoneName, subZone = subZone, x = x, y = y }
         }
-        Epoch_DropsData[mobName].kills = Epoch_DropsData[mobName].kills + 1
+        Epoch_DropsData[mobName].kills = (Epoch_DropsData[mobName].kills or 0) + 1
         Epoch_DropsData[mobName].lastSeen = date("%Y-%m-%d %H:%M:%S")
         Epoch_DropsData[mobName].location = { zone = zoneName, subZone = subZone, x = x, y = y }
         dbg("Mob loot opened, counted kill for '%s' at (%.2f, %.2f).", mobName, x or 0, y or 0)
@@ -278,14 +302,13 @@ f:SetScript("OnEvent", function(self, event, ...)
                     equipSlot   = equipSlot,
                     tooltip     = tooltipLines
                 }
-                drops[itemID].count = drops[itemID].count + quantity
+                drops[itemID].count = (drops[itemID].count or 0) + quantity
                 dbg("Mob drop: +%d x %s (ID %d) -> %s", quantity, drops[itemID].name or "?", itemID, mobName)
             end
         end
 
         SaveAsJson()
-
-    elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
+	elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
         if not isAllowedRealm then return end
         local _, subevent, _, _, _, _, _, _, destName = GetCLEUArgs(...)
         if subevent == "UNIT_DIED" and UnitExists("target") and UnitIsDead("target") then
@@ -352,7 +375,7 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
                 equipSlot   = equipSlot,
                 tooltip     = tooltipLines
             }
-            drops[itemID].count = drops[itemID].count + (quantity or 1)
+            drops[itemID].count = (drops[itemID].count or 0) + (quantity or 1)
             dbg("Quest choice drop: +%d x %s (ID %d) for quest '%s'", quantity or 1, name or "?", itemID, questTitle)
         end
     end
@@ -375,7 +398,7 @@ hooksecurefunc("GetQuestReward", function(choiceIndex)
                 equipSlot   = equipSlot,
                 tooltip     = tooltipLines
             }
-            drops[itemID].count = drops[itemID].count + (quantity or 1)
+            drops[itemID].count = (drops[itemID].count or 0) + (quantity or 1)
             dbg("Quest reward drop: +%d x %s (ID %d) for quest '%s'", quantity or 1, name or "?", itemID, questTitle)
         end
     end
@@ -388,9 +411,7 @@ local saver = CreateFrame("Frame")
 saver:RegisterEvent("PLAYER_LOGOUT")
 saver:SetScript("OnEvent", SaveAsJson)
 
--- =========================================================
 -- Slash command: /ed (debug only)
--- =========================================================
 SLASH_EPOCHDROPS1 = "/ed"
 SlashCmdList["EPOCHDROPS"] = function(msg)
     msg = (msg or ""):lower():match("^%s*(.-)%s*$")
