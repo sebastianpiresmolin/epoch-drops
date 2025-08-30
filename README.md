@@ -1,6 +1,8 @@
 # How to install addon
 
-*NEW VERISON OF BOTH ADDON AND UPLOADER: 2025-08-17*
+*NEW VERSION OF ADDON: 2025-08-30*
+
+*NEW VERISON OF UPLOADER: 2025-08-17*
 
 *Download Epoch_Drops and place the entire folder in your Addons folder:*
 
