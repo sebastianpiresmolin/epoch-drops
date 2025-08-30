@@ -1,6 +1,6 @@
 ## Interface: 30300
 ## Title: Epoch_Drops
 ## Notes: Tracks mob kills and loot for drop rate analysis ready to be browsed at www.epochdrops.com
-## Version: 1.0
+## Version: 1.0.2
 Epoch_Drops.lua
 ## SavedVariables: Epoch_DropsData, Epoch_DropsJSON
